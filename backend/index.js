@@ -65,6 +65,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/mentors', require('./routes/mentor.routes'));
+app.use('/api/sessions', require('./routes/session.routes'));
 
 // Apply rate limiting to auth routes
 app.use('/api/auth', authRateLimiter);
