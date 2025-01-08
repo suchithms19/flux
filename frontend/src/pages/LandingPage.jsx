@@ -1,36 +1,76 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/common/Header';
+import Hero from '../components/common/Hero';
+import FeatureSection from '../components/common/FeatureSection';
+import CallToAction from '../components/common/CallToAction';
+import image1 from '/src/assets/image1.png';
+import image2 from "/src/assets/image2.png";
+import image3 from "/src/assets/image3.png";
+import Calendly from '../components/common/Calendly';
+import Footer from '../components/common/Footer';
 
 const LandingPage = () => {
-    const navigate = useNavigate();
-  function handleExplore(){
-    navigate('/fluxmentors')
-  }
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
+  }, []);
+
+  const handleJoinWait = () => {
+    navigate('/customerform');
+  };
+  const handleJoinMentor = () => {
+    navigate('/mentor');
+  };
 
   return (
-    <div className={`font-poppins flex flex-col items-center justify-center mt-24 lg:mt-5 lg:min-h-screen w-full lg:px-8 transition-all duration-1000 `}>
-      <div className="max-w-4xl mx-auto text-center lg:mt-20">
-        <h1 className="tracking-tight text-3xl py-6 lg:py-0.5 sm:text-4xl lg:text-6xl font-black mb-2 lg:mb-6 text-custom ">
-          Get <span className="bg-[#ffd72c] px-2 inline-block mt-2 sm:mt-0 sm:inline">instant mentorship</span>  from top industry experts
-        </h1>
-        <p className="text-xl px-4 lg:px-0.5 sm:text-lg lg:text-2xl mb-4 sm:mb-8 max-w-4xl mx-auto">
-          <span>Connect with mentors</span> for actionable advice to land your dream job, start freelancing, or learn new skills.
-        </p>
-        <div className="relative">
-          <div className="bg-white uppercase w-[calc(100%-3rem)] mx-6 lg:w-max lg:mx-0 shadow-2xl rounded-lg text-black my-10 py-8 p-4 sm:p-8 border-2 border-black inline-block mb-6 sm:mb-10 font-semibold">
-            <h2 className="text-lg mb-3 sm:mb-5 text-center">Curious ?</h2>
-            <div className="flex flex-col lg:flex-row gap-4">
-
-              <button 
-                onClick={handleExplore}
-                className="w-full lg:w-auto bg-black text-white py-2 lg:px-16 sm:py-4 lg:sm:px-28 rounded-lg font-semibold shadow-md hover:scale-105 transition-transform duration-300"
-              >
-                Explore Mentors
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className='font-poppins bg-white text-black '>
+      <Header isVisible={isVisible} />
+      <Hero isVisible={isVisible} handleJoinWait={handleJoinWait} handleJoinMentor={handleJoinMentor} />
+      <section className='space-y-16 md:space-y-24 lg:space-y-36 px-4 md:px-6'>
+        <FeatureSection
+          imageSrc={image1}
+          title={<span className='font-poppins'>At Your Fingertips: <br /> Experts in Every Field</span>}
+          description={
+            <span className='font-poppins'>
+              Want to start learning coding, dive into freelancing, or eager to acquire new skills? Work faster with an Expert who will offer advice and guidance tailored to your ambitions. Unlock your potential with Flux.
+            </span>
+          }
+        />
+        <FeatureSection
+          imageSrc={image2}
+          title={<span className='font-poppins'>Affordable and Answers Personalized to You!</span>}
+          description={
+            <span className='font-poppins'>
+              Why settle for generic solutions when you can get personalized guidance from Flux experts tailored to your unique needs—all at an affordable cost! Stop sifting through vague information online and connect with seasoned professionals who understand your situation and provide specific advice.
+            </span>
+          }
+          imageRight
+        />
+      </section>
+      <div className='px-4 md:px-6'>
+        <CallToAction handleJoinWait={handleJoinWait} />
+        <FeatureSection
+            imageSrc={image3}
+            title={<span className='font-poppins'>Get to Know Flux <br /> Book a Call with the Founders!</span>}
+            description={
+              <span className='font-poppins'>
+                Curious about our mission and how Flux is transforming student learning? Connect with our founders for an exclusive look into our vision! <br /> <br />
+                Ask questions, share your thoughts, and learn how you can be part of our journey. <br /> <br />
+                Ready to join us? Book your call now! 
+              </span>
+            }
+            imageRight
+          />
       </div>
+      
+      <div className='flex justify-center my-8'><Calendly/></div>
+      
+      <Footer></Footer>
     </div>
   );
 };

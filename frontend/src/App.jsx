@@ -5,21 +5,22 @@ import Login from './pages/Login';
 import MentorOnboard from './pages/MentorOnboard';
 import LandingPage from './pages/LandingPage';
 import useAuthStore from './store/authStore';
-
+import MentorOnboardInfo from './pages/MentorOnboardInfo';
 function App() {
   const { getCurrentUser, user, isLoading } = useAuthStore();
 
   useEffect(() => {
-    if (!user && !isLoading) {  // Only call if no user and not already loading
+    if (!user && !isLoading) {  
       getCurrentUser();
     }
-  }, []); // Remove getCurrentUser from dependencies
+  }, []); 
 
   return (
     <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/mentor" element={<MentorOnboardInfo />} />
             <Route path="/mentor/onboard" element={<MentorOnboard />} />
             
             {/* Protected Routes */}
