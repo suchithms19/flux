@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { isAuthenticated, isAdmin } = require('../middleware/auth.middleware');
 const Mentor = require('../models/Mentor');
 const User = require('../models/User');
-const sendEmail = require('../utils/emailService'); // We'll create this later
+const sendEmail = require('../utils/emailService'); 
 
 // Apply to become a mentor
 router.post('/apply', isAuthenticated, async (req, res) => {

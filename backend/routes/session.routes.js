@@ -3,6 +3,7 @@ const { isAuthenticated } = require('../middleware/auth.middleware');
 const Session = require('../models/Session');
 const Mentor = require('../models/Mentor');
 const sendEmail = require('../utils/emailService');
+const { initializeStreamChannels } = require('../utils/streamService');
 
 // Book a session slot
 router.post('/book', isAuthenticated, async (req, res) => {
@@ -93,8 +94,12 @@ router.post('/:sessionId/start', isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'Session cannot be started' });
     }
 
+    // Initialize Stream channels
+    const { channelId, callId } = await initializeStreamChannels(session);
+    
     session.status = 'ongoing';
-    session.startTime = new Date(); // Update to actual start time
+    session.startTime = new Date();
+    session.streamData = { channelId, callId };
     await session.save();
 
     res.json(session);

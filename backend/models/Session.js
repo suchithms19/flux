@@ -46,7 +46,11 @@ const sessionSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  streamData: {
+    channelId: String,
+    callId: String
+  }
 }, {
   timestamps: true
 });
