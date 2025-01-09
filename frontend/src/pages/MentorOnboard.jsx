@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Github, Linkedin, Twitter, Instagram, Upload, Loader2 } from 'lucide-react'
+import { Github, Linkedin, Twitter, Instagram, Upload, Loader2, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -14,11 +14,15 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useNavigate } from 'react-router-dom';
-
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const MentorOnboard = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [educationFields, setEducationFields] = useState([{ degree: '', institution: '', year: '' }]);
+  const [workFields, setWorkFields] = useState([{ company: '', role: '', duration: '' }]);
   
   const form = useForm({
     defaultValues: {
@@ -37,8 +41,65 @@ const MentorOnboard = () => {
       github: '',
       instagram: '',
       mentoringAreas: [],
+      education: educationFields,
+      work: workFields,
     },
   });
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        // Show preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setProfilePhoto(reader.result);
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to server
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        const response = await axios.post(
+          'http://localhost:3000/api/mentors/upload-photo',
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        if (response.data.url) {
+          // Store the URL for form submission
+          form.setValue('profilePhoto', response.data.url);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error('Failed to upload photo');
+      }
+    }
+  };
+
+  const addEducationField = () => {
+    setEducationFields([...educationFields, { degree: '', institution: '', year: '' }]);
+  };
+
+  const removeEducationField = (index) => {
+    const newFields = educationFields.filter((_, i) => i !== index);
+    setEducationFields(newFields);
+  };
+
+  const addWorkField = () => {
+    setWorkFields([...workFields, { company: '', role: '', duration: '' }]);
+  };
+
+  const removeWorkField = (index) => {
+    const newFields = workFields.filter((_, i) => i !== index);
+    setWorkFields(newFields);
+  };
 
   const onSubmit = async (values) => {
     try {
@@ -88,29 +149,43 @@ const MentorOnboard = () => {
       }
 
       setIsSubmitting(true);
-      const response = await fetch(
-        `/api/submitMentorForm`,
+      
+      // First, upload the profile photo if exists
+      let photoUrl = null;
+      if (profilePhoto) {
+        const photoResponse = await axios.post(
+          'http://localhost:3000/api/mentors/upload-photo',
+          { photoData: profilePhoto },
+          { withCredentials: true }
+        );
+        photoUrl = photoResponse.data.url;
+      }
+
+      // Submit the form data
+      const response = await axios.post(
+        'http://localhost:3000/api/mentors/onboard',
         {
-          method: 'POST',
+          ...values,
+          profilePhoto: photoUrl
+        },
+        {
+          withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(values),
         }
       );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Form submission failed');
+
+      if (response.status === 201) {
+        toast.success('Application submitted successfully!');
+        navigate('/mentor/pending');
       }
-      
-      navigate('/thank-you');
-      
     } catch (error) {
       console.error('Error:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit application');
       form.setError('root', {
         type: 'submitError',
-        message: error.message || 'Failed to submit form. Please try again.'
+        message: error.response?.data?.message || 'Failed to submit form. Please try again.'
       });
     } finally {
       setIsSubmitting(false);
@@ -139,6 +214,25 @@ const MentorOnboard = () => {
                 {form.formState.errors.root.message}
               </div>
             )}
+
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <div className="h-32 w-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-gray-400" />
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+              <p className="text-sm text-gray-500">Upload your profile photo</p>
+            </div>
 
             <div>
               <FormField
@@ -329,7 +423,7 @@ const MentorOnboard = () => {
                 <FormItem>
                   <FormLabel>Mentoring Areas</FormLabel>
                   <FormControl>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 ">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       {[
                         { id: 'coding-software', label: 'Coding & Software' },
                         { id: 'mba-cat', label: 'MBA/CAT' },
@@ -339,10 +433,12 @@ const MentorOnboard = () => {
                         <div
                           key={option.id}
                           className={`
-                            cursor-pointer rounded-lg border-2 p-4 text-center
+                            cursor-pointer rounded-lg border-2 p-4
+                            min-h-[80px] flex items-center justify-center
+                            transition-all duration-200 hover:shadow-md
                             ${field.value.includes(option.id) 
                               ? 'border-[#ffe05c] bg-[#ffe05c]/10' 
-                              : 'border-gray-200'
+                              : 'border-gray-200 hover:border-gray-300'
                             }
                           `}
                           onClick={() => {
@@ -352,7 +448,7 @@ const MentorOnboard = () => {
                             field.onChange(newValue);
                           }}
                         >
-                          {option.label}
+                          <span className="text-center">{option.label}</span>
                         </div>
                       ))}
                     </div>
@@ -361,6 +457,140 @@ const MentorOnboard = () => {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Education Details</h3>
+                <Button
+                  type="button"
+                  onClick={addEducationField}
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                >
+                  <Plus className="h-4 w-4" /> Add Education
+                </Button>
+              </div>
+              {educationFields.map((field, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-4 relative">
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeEducationField(index)}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name={`education.${index}.degree`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Degree</FormLabel>
+                          <FormControl>
+                            <Input placeholder="B.Tech" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`education.${index}.institution`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Institution</FormLabel>
+                          <FormControl>
+                            <Input placeholder="IIT Delhi" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`education.${index}.year`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input placeholder="2016 - 2020" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Work Experience</h3>
+                <Button
+                  type="button"
+                  onClick={addWorkField}
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                >
+                  <Plus className="h-4 w-4" /> Add Experience
+                </Button>
+              </div>
+              {workFields.map((field, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-4 relative">
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeWorkField(index)}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name={`work.${index}.company`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Google" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`work.${index}.role`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Senior Software Engineer" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`work.${index}.duration`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration</FormLabel>
+                          <FormControl>
+                            <Input placeholder="2020 - Present" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
 
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Social Media Links</h3>

@@ -20,8 +20,8 @@ const LandingPage = () => {
     }, 100);
   }, []);
 
-  const handleJoinWait = () => {
-    navigate('/customerform');
+  const handleJoinexplore = () => {
+    navigate('/browse');
   };
   const handleJoinMentor = () => {
     navigate('/mentor');
@@ -30,7 +30,7 @@ const LandingPage = () => {
   return (
     <div className='font-poppins bg-white text-black '>
       <Header isVisible={isVisible} />
-      <Hero isVisible={isVisible} handleJoinWait={handleJoinWait} handleJoinMentor={handleJoinMentor} />
+      <Hero isVisible={isVisible} handleJoinexplore={handleJoinexplore} handleJoinMentor={handleJoinMentor} />
       <section className='space-y-16 md:space-y-24 lg:space-y-36 px-4 md:px-6'>
         <FeatureSection
           imageSrc={image1}
@@ -53,7 +53,7 @@ const LandingPage = () => {
         />
       </section>
       <div className='px-4 md:px-6'>
-        <CallToAction handleJoinWait={handleJoinWait} />
+        <CallToAction handleJoinexplore={handleJoinexplore} />
         <FeatureSection
             imageSrc={image3}
             title={<span className='font-poppins'>Get to Know Flux <br /> Book a Call with the Founders!</span>}

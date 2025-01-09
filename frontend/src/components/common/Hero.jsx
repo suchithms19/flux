@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-const Hero = ({ isVisible, handleJoinWait,handleJoinMentor }) => {
+const Hero = ({ isVisible, handleJoinexplore,handleJoinMentor }) => {
   
 
   return (
@@ -23,10 +23,10 @@ const Hero = ({ isVisible, handleJoinWait,handleJoinMentor }) => {
             <h2 className="text-lg mb-3 sm:mb-5 text-center">Curious ?</h2>
             <div className="flex flex-col lg:flex-row gap-4">
               <button 
-                onClick={handleJoinWait} 
+                onClick={handleJoinexplore} 
                 className="w-full lg:w-auto bg-customYellow text-black py-2 lg:px-16 sm:py-4 lg:sm:px-28 rounded-lg font-semibold shadow-md hover:scale-105 transition-transform duration-300"
               >
-                Join the Waitlist
+                Explore Mentors
               </button>
               <button 
                 onClick={handleJoinMentor} 

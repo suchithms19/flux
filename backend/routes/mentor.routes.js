@@ -3,6 +3,9 @@ const { isAuthenticated, isAdmin } = require('../middleware/auth.middleware');
 const Mentor = require('../models/Mentor');
 const User = require('../models/User');
 const sendEmail = require('../utils/emailService'); 
+const { validateMentorOnboarding } = require('../middleware/mentorValidation.middleware');
+const upload = require('../middleware/upload.middleware');
+const { uploadToCloudinary } = require('../utils/uploadService');
 
 // Apply to become a mentor
 router.post('/apply', isAuthenticated, async (req, res) => {
@@ -226,5 +229,116 @@ router.put('/profile', isAuthenticated, async (req, res) => {
     });
   }
 });
+
+// Add this route to handle mentor onboarding form
+router.post('/onboard', 
+  isAuthenticated, 
+  validateMentorOnboarding,
+  async (req, res) => {
+    try {
+      // Check if user already has a mentor profile
+      const existingMentor = await Mentor.findOne({ user: req.user._id });
+      if (existingMentor) {
+        return res.status(400).json({ 
+          message: 'You already have a mentor profile' 
+        });
+      }
+
+      // Extract education and work arrays from request body
+      const { education, work, profilePhoto, ...mentorData } = req.body;
+
+      // Create new mentor profile
+      const mentor = new Mentor({
+        user: req.user._id,
+        ...mentorData,
+        profilePhoto,
+        ratePerMinute: 1,
+        status: 'pending'
+      });
+
+      // Save the mentor profile
+      await mentor.save();
+
+      // Update user's mentor status
+      await User.findByIdAndUpdate(req.user._id, {
+        mentorStatus: 'pending',
+        mentorProfile: {
+          expertise: mentorData.mentoringAreas,
+          bio: mentorData.bio,
+          experience: mentorData.experience
+        }
+      });
+
+      // Send email notifications
+      await Promise.all([
+        // Notify admin
+        sendEmail({
+          to: process.env.ADMIN_EMAIL,
+          subject: 'New Mentor Application',
+          template: 'newMentorApplication',
+          data: {
+            mentorName: mentorData.fullName,
+            mentorEmail: mentorData.email,
+            adminDashboardUrl: `${process.env.CLIENT_URL}/admin/mentors/pending`
+          }
+        }),
+        // Notify mentor
+        sendEmail({
+          to: mentorData.email,
+          subject: 'Mentor Application Received',
+          template: 'mentorApplicationReceived',
+          data: {
+            mentorName: mentorData.fullName
+          }
+        })
+      ]);
+
+      res.status(201).json({
+        message: 'Mentor application submitted successfully',
+        mentor
+      });
+
+    } catch (error) {
+      console.error('Mentor onboarding error:', error);
+      res.status(500).json({ 
+        message: 'Error submitting mentor application',
+        error: error.message 
+      });
+    }
+  }
+);
+
+// Add a route to upload mentor profile photo
+router.post('/upload-photo', 
+  isAuthenticated, 
+  upload.single('photo'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const result = await uploadToCloudinary(req.file);
+
+      // If mentor profile exists, update the photo
+      const mentor = await Mentor.findOne({ user: req.user._id });
+      if (mentor) {
+        mentor.profilePhoto = result.url;
+        await mentor.save();
+      }
+
+      res.json({ 
+        message: 'Photo uploaded successfully',
+        url: result.url
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ 
+        message: 'Error uploading photo',
+        error: error.message 
+      });
+    }
+  }
+);
 
 module.exports = router; 

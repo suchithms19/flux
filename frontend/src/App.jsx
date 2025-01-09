@@ -6,6 +6,7 @@ import MentorOnboard from './pages/MentorOnboard';
 import LandingPage from './pages/LandingPage';
 import useAuthStore from './store/authStore';
 import MentorOnboardInfo from './pages/MentorOnboardInfo';
+import MentorBrowse from './pages/MentorBrowse';
 function App() {
   const { getCurrentUser, user, isLoading } = useAuthStore();
 
@@ -20,6 +21,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/browse" element={<MentorBrowse />} />
             <Route path="/mentor" element={<MentorOnboardInfo />} />
             <Route path="/mentor/onboard" element={<MentorOnboard />} />
             
