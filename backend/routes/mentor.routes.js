@@ -7,56 +7,7 @@ const { validateMentorOnboarding } = require('../middleware/mentorValidation.mid
 const upload = require('../middleware/upload.middleware');
 const { uploadToCloudinary } = require('../utils/uploadService');
 
-// Apply to become a mentor
-router.post('/apply', isAuthenticated, async (req, res) => {
-  try {
-    // Check if user already applied
-    const existingMentor = await Mentor.findOne({ user: req.user._id });
-    if (existingMentor) {
-      return res.status(400).json({ 
-        message: 'You have already applied to be a mentor' 
-      });
-    }
 
-    // Create new mentor application
-    const mentor = new Mentor({
-      user: req.user._id,
-      ...req.body,
-      email: req.user.email, // Use email from authenticated user
-      status: 'pending'
-    });
-
-    await mentor.save();
-
-    // Update user's mentor status
-    await User.findByIdAndUpdate(req.user._id, {
-      mentorStatus: 'pending'
-    });
-
-    // Send email notification to admin
-    await sendEmail({
-      to: process.env.ADMIN_EMAIL,
-      subject: 'New Mentor Application',
-      template: 'newMentorApplication',
-      data: {
-        mentorName: mentor.fullName,
-        mentorEmail: mentor.email
-      }
-    });
-
-    res.status(201).json({
-      message: 'Mentor application submitted successfully',
-      mentor
-    });
-
-  } catch (error) {
-    console.error('Mentor application error:', error);
-    res.status(500).json({ 
-      message: 'Error submitting mentor application',
-      error: error.message 
-    });
-  }
-});
 
 // Get all mentors with filters
 router.get('/', async (req, res) => {
@@ -231,7 +182,7 @@ router.put('/profile', isAuthenticated, async (req, res) => {
 });
 
 // Add this route to handle mentor onboarding form
-router.post('/onboard', 
+router.post('/onboard',
   isAuthenticated, 
   validateMentorOnboarding,
   async (req, res) => {
@@ -244,16 +195,39 @@ router.post('/onboard',
         });
       }
 
-      // Extract education and work arrays from request body
-      const { education, work, profilePhoto, ...mentorData } = req.body;
+      // Validate required fields
+      const { 
+        fullName, email, phone, gender, organization,
+        role, experience, headline, bio, languages,
+        mentoringAreas, profilePhoto, // Add profilePhoto
+        education, work, ...mentorData 
+      } = req.body;
+
+      // Validate profile photo
+      if (!profilePhoto) {
+        return res.status(400).json({
+          message: 'Profile photo is required'
+        });
+      }
 
       // Create new mentor profile
       const mentor = new Mentor({
         user: req.user._id,
+        fullName,
+        email,
+        phone,
+        gender,
+        organization,
+        role,
+        experience,
+        headline,
+        bio,
+        languages,
+        mentoringAreas,
+        profilePhoto, // Save the Cloudinary URL
         ...mentorData,
-        profilePhoto,
-        ratePerMinute: 1,
-        status: 'pending'
+        status: 'pending',
+        ratePerMinute: 1
       });
 
       // Save the mentor profile
@@ -263,32 +237,30 @@ router.post('/onboard',
       await User.findByIdAndUpdate(req.user._id, {
         mentorStatus: 'pending',
         mentorProfile: {
-          expertise: mentorData.mentoringAreas,
-          bio: mentorData.bio,
-          experience: mentorData.experience
+          expertise: mentoringAreas,
+          bio: bio,
+          experience: experience
         }
       });
 
       // Send email notifications
       await Promise.all([
-        // Notify admin
         sendEmail({
           to: process.env.ADMIN_EMAIL,
           subject: 'New Mentor Application',
           template: 'newMentorApplication',
           data: {
-            mentorName: mentorData.fullName,
-            mentorEmail: mentorData.email,
+            mentorName: fullName,
+            mentorEmail: email,
             adminDashboardUrl: `${process.env.CLIENT_URL}/admin/mentors/pending`
           }
         }),
-        // Notify mentor
         sendEmail({
-          to: mentorData.email,
+          to: email,
           subject: 'Mentor Application Received',
           template: 'mentorApplicationReceived',
           data: {
-            mentorName: mentorData.fullName
+            mentorName: fullName
           }
         })
       ]);
@@ -310,7 +282,6 @@ router.post('/onboard',
 
 // Add a route to upload mentor profile photo
 router.post('/upload-photo', 
-  isAuthenticated, 
   upload.single('photo'),
   async (req, res) => {
     try {
@@ -319,13 +290,6 @@ router.post('/upload-photo',
       }
 
       const result = await uploadToCloudinary(req.file);
-
-      // If mentor profile exists, update the photo
-      const mentor = await Mentor.findOne({ user: req.user._id });
-      if (mentor) {
-        mentor.profilePhoto = result.url;
-        await mentor.save();
-      }
 
       res.json({ 
         message: 'Photo uploaded successfully',

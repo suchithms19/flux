@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useAuthStore from '../store/authStore';
 
 export default function MentorOnboardInfo() {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
+  const {login} = useAuthStore();
 
   useEffect(() => {
     setTimeout(() => {
@@ -11,8 +13,14 @@ export default function MentorOnboardInfo() {
     }, 100);
   }, []);
 
+
   const handleBack = () => {
     navigate('/');
+  };
+
+  const handleBecomeMentor = () => {
+  navigate('/mentor/login');
+  
   };
 
   return (
@@ -40,10 +48,10 @@ export default function MentorOnboardInfo() {
               
                 <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center px-4 sm:px-0">
                   <button 
-                    onClick={() => navigate('/mentor/onboard')}
-                    className="bg-[#ffe05c] text-black px-8 py-3 rounded-lg font-medium hover:scale-105"
+                    onClick={handleBecomeMentor}
+                    className="flex items-center justify-center gap-2 bg-[#ffe05c] text-black px-8 py-3 rounded-lg font-medium hover:scale-105 transition-transform"
                   >
-                    Become a Mentor
+                  Become a mentor
                   </button>
                 </div>
 
@@ -70,7 +78,7 @@ export default function MentorOnboardInfo() {
                       <div className="p-6 rounded-xl bg-white/50 backdrop-blur-sm border border-gray-100 hover:border-[#ffe05c] transition-all">
                         <h3 className="font-medium text-lg mb-2">Monetize Your Expertise</h3>
                         <p className="text-gray-500 text-sm">
-                        Turn your knowledge into income and get paid for every minute of your time.
+                          Turn your knowledge into income and get paid for every minute of your time.
                         </p>
                       </div>
                       
@@ -96,6 +104,6 @@ export default function MentorOnboardInfo() {
         </section>
       </main>
     </div>
-  )
+  );
 }
 

@@ -25,14 +25,8 @@ router.get('/google/callback',
         return res.redirect(`${process.env.CLIENT_URL}/login`);
       }
       
-      // Redirect based on user role
-      if (req.user.role === 'admin') {
-        res.redirect(`${process.env.CLIENT_URL}/admin/dashboard`);
-      } else if (req.user.role === 'mentor' && req.user.mentorStatus === 'approved') {
-        res.redirect(`${process.env.CLIENT_URL}/mentor/dashboard`);
-      } else {
-        res.redirect(`${process.env.CLIENT_URL}/dashboard`);
-      }
+      // Redirect to success page
+      res.redirect(`${process.env.CLIENT_URL}/auth/success`);
     });
   }
 );

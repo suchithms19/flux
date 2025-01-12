@@ -2,14 +2,14 @@ const validateMentorOnboarding = (req, res, next) => {
   const { 
     fullName, email, phone, gender, organization,
     role, experience, headline, bio, languages,
-    mentoringAreas
+    mentoringAreas, profilePhoto
   } = req.body;
 
   // Required fields validation
   const requiredFields = {
     fullName, email, phone, gender, organization,
     role, experience, headline, bio, languages,
-    mentoringAreas
+    mentoringAreas, profilePhoto
   };
 
   for (const [field, value] of Object.entries(requiredFields)) {
@@ -18,6 +18,13 @@ const validateMentorOnboarding = (req, res, next) => {
         message: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
       });
     }
+  }
+
+  // Validate profilePhoto URL
+  if (!profilePhoto.startsWith('http')) {
+    return res.status(400).json({
+      message: 'Invalid profile photo URL'
+    });
   }
 
   // Email validation

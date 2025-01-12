@@ -169,7 +169,12 @@ const mentorSchema = new mongoose.Schema({
         default: Date.now
       }
     }]
-  }]
+  }],
+
+  profilePhoto: {
+    type: String,
+    required: true
+  }
 }, {
   timestamps: true
 });
