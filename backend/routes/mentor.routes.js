@@ -10,7 +10,7 @@ const { uploadToCloudinary } = require('../utils/uploadService');
 
 
 // Get all mentors with filters
-router.get('/', async (req, res) => {
+router.get('/mentordata', async (req, res) => {
   try {
     const {
       area,
@@ -199,8 +199,7 @@ router.post('/onboard',
       const { 
         fullName, email, phone, gender, organization,
         role, experience, headline, bio, languages,
-        mentoringAreas, profilePhoto, // Add profilePhoto
-        education, work, ...mentorData 
+        mentoringAreas, profilePhoto, mentoringTopics
       } = req.body;
 
       // Validate profile photo
@@ -225,7 +224,7 @@ router.post('/onboard',
         languages,
         mentoringAreas,
         profilePhoto, // Save the Cloudinary URL
-        ...mentorData,
+        mentoringTopics, // Save the selected topics
         status: 'pending',
         ratePerMinute: 1
       });

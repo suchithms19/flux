@@ -2,14 +2,14 @@ const validateMentorOnboarding = (req, res, next) => {
   const { 
     fullName, email, phone, gender, organization,
     role, experience, headline, bio, languages,
-    mentoringAreas, profilePhoto
+    mentoringAreas, profilePhoto, mentoringTopics
   } = req.body;
 
   // Required fields validation
   const requiredFields = {
     fullName, email, phone, gender, organization,
     role, experience, headline, bio, languages,
-    mentoringAreas, profilePhoto
+    mentoringAreas, profilePhoto, mentoringTopics
   };
 
   for (const [field, value] of Object.entries(requiredFields)) {
@@ -40,6 +40,13 @@ const validateMentorOnboarding = (req, res, next) => {
   if (!phoneRegex.test(phone)) {
     return res.status(400).json({
       message: 'Phone number must be 10 digits'
+    });
+  }
+
+  // Validate mentoringTopics
+  if (!Array.isArray(mentoringTopics) || mentoringTopics.length === 0) {
+    return res.status(400).json({
+      message: 'At least one mentoring topic is required'
     });
   }
 

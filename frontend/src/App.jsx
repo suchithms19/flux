@@ -24,19 +24,19 @@ function App() {
   return (
     <Router>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/success" element={<AuthSuccess />} />
             <Route path="/mentor/login" element={<MentorLogin />} />
             <Route path="/browse" element={<MentorBrowse />} />
             <Route path="/mentor" element={<MentorOnboardInfo />} />
-            <Route path="/mentor/onboard" element={<MentorOnboard />} />
-            <Route path="/mentor/thank-you" element={<MentorThankYou />} />
-            <Route path="/mentor/inreview" element={<MentorInreview />} />
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              
+              <Route path="/mentor/onboard" element={<MentorOnboard />} />
+              <Route path="/mentor/thank-you" element={<MentorThankYou />} />
+              <Route path="/mentor/inreview" element={<MentorInreview />} />        
             </Route>
           </Routes>
     </Router>

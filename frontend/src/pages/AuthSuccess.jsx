@@ -1,11 +1,36 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 function AuthSuccess() {
   const { getCurrentUser } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const cleanup = async () => {
+      try {
+        await axios.get(`${API_URL}/auth/logout`, { withCredentials: true });
+      } catch (error) {
+        console.error('Cleanup error:', error);
+      }
+    };
+
+    // Set a timeout to clean up if authentication takes too long
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      navigate('/login');
+    }, 10000); // 10 seconds timeout
+
+    // Try to get current user
     getCurrentUser();
+
+    // Cleanup on unmount or if user navigates away
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (

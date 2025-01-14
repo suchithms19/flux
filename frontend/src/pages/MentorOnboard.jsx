@@ -27,6 +27,17 @@ const MentorOnboard = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [educationFields, setEducationFields] = useState([{ degree: '', institution: '', year: '' }]);
   const [workFields, setWorkFields] = useState([{ company: '', role: '', duration: '' }]);
+  const [topicInput, setTopicInput] = useState('');
+  const [suggestions, setSuggestions] = useState([
+    'React', 'JavaScript', 'Python', 'Java', 'Node.js', 
+    'Database', 'System Design', 'Interview Prep', 
+    'Data Structures', 'Algorithms', 'Web Development', 
+    'Mobile Development', 'Client Acquisition', 
+    'Portfolio Building', 'Time Management', 
+    'Pricing Strategies', 'Resume Building', 
+    'Networking', 'Career Transition'
+  ]);
+  
   
   const form = useForm({
     defaultValues: {
@@ -45,6 +56,7 @@ const MentorOnboard = () => {
       github: '',
       instagram: '',
       mentoringAreas: [],
+      mentoringTopics: [],
       profilePhoto: '',
     },
     resolver: zodResolver(
@@ -60,6 +72,7 @@ const MentorOnboard = () => {
         bio: z.string().min(1, "Bio is required"),
         languages: z.string().min(1, "Languages are required"),
         mentoringAreas: z.array(z.string()).min(1, "Select at least one mentoring area"),
+        mentoringTopics: z.array(z.string()).min(1, "Select at least one mentoring topic"),
         profilePhoto: z.string().min(1, "Profile photo is required"),
         linkedin: z.string().optional(),
         twitter: z.string().optional(),
@@ -136,6 +149,18 @@ const MentorOnboard = () => {
   const removeWorkField = (index) => {
     const newFields = workFields.filter((_, i) => i !== index);
     setWorkFields(newFields);
+  };
+
+  const handleTopicInputChange = (e) => {
+    setTopicInput(e.target.value);
+  };
+
+  const handleAddTopic = (topic) => {
+    const currentTopics = form.getValues('mentoringTopics') || [];
+    if (!currentTopics.includes(topic)) {
+      form.setValue('mentoringTopics', [...currentTopics, topic]);
+    }
+    setTopicInput(''); // Clear input after adding
   };
 
   const onSubmit = async (values) => {
@@ -440,6 +465,7 @@ const MentorOnboard = () => {
                   <FormControl>
                     <Textarea
                       className="min-h-[150px]"
+                      placeholder="Tell us about yourself and how you can help mentees. Where can you mentor them?"
                       {...field}
                     />
                   </FormControl>
@@ -474,7 +500,6 @@ const MentorOnboard = () => {
                     }`}>
                       {[
                         { id: 'coding-software', label: 'Coding & Software' },
-                        { id: 'mba-cat', label: 'MBA & CAT' },
                         { id: 'freelancing', label: 'Freelancing' },
                         { id: 'career-job', label: 'Career & Job' },
                       ].map((option) => (
@@ -500,6 +525,73 @@ const MentorOnboard = () => {
                           <span className="text-center">{option.label}</span>
                         </div>
                       ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mentoringTopics"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mentoring Topics <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={topicInput}
+                          onChange={handleTopicInputChange}
+                          placeholder="Type to search or add topics (React, Client Acquisition , Resume Building) "
+                          className="w-full border rounded p-2"
+                        />
+                        {topicInput && (
+                          <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1">
+                            {suggestions
+                              .filter((suggestion) =>
+                                suggestion.toLowerCase().includes(topicInput.toLowerCase())
+                              )
+                              .map((suggestion) => (
+                                <div
+                                  key={suggestion}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleAddTopic(suggestion)}
+                                >
+                                  {suggestion}
+                                </div>
+                              ))}
+                            <div
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleAddTopic(topicInput)}
+                            >
+                              Add "{topicInput}"
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {field.value?.map((topic, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-[#ffe05c] text-black rounded-full"
+                          >
+                            {topic}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newTopics = field.value.filter((t) => t !== topic);
+                                field.onChange(newTopics);
+                              }}
+                              className="text-black hover:text-red-500"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </FormControl>
                   <FormMessage className="text-red-500" />

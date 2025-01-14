@@ -24,7 +24,7 @@ const authRateLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 
-// Middleware
+// Basic middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
@@ -33,19 +33,17 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Apply rate limiters
 app.use(limiter);
+app.use('/api/auth', authRateLimiter);
 
-// Session configuration
+// Session and auth middleware
 app.use(session(sessionConfig));
-
-// Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Import passport configuration
-require('./config/passport');
-
-// Add security headers
+// Security headers
 app.use((req, res, next) => {
   res.set({
     'X-XSS-Protection': '1; mode=block',
@@ -67,9 +65,6 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/mentors', require('./routes/mentor.routes'));
 app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/stream', require('./routes/stream.routes'));
-
-// Apply rate limiting to auth routes
-app.use('/api/auth', authRateLimiter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

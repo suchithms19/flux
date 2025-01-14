@@ -45,32 +45,51 @@ router.get('/current-user', (req, res) => {
 
 // Logout route
 router.get('/logout', (req, res) => {
-  try {
-    // Clear the session
-    req.session.destroy((err) => {
+  if (req.session) {
+    const sessionStore = req.sessionStore;
+    const sessionId = req.session.id;
+
+    // First logout from passport
+    req.logout(function(err) {
       if (err) {
-        console.error('Session destruction error:', err);
+        console.error('Passport logout error:', err);
         return res.status(500).json({ message: 'Error logging out' });
       }
 
-      // Logout from passport
-      req.logout((err) => {
+      // Then destroy the session from store
+      sessionStore.destroy(sessionId, (err) => {
         if (err) {
-          console.error('Passport logout error:', err);
-          return res.status(500).json({ message: 'Error logging out' });
+          console.error('Session store destruction error:', err);
         }
 
-        // Clear the session cookie
-        res.clearCookie('sessionId');
-        res.clearCookie('connect.sid');
-        
-        // Send success response
-        res.status(200).json({ message: 'Logged out successfully' });
+        // Finally destroy the session object
+        req.session.destroy(function(err) {
+          if (err) {
+            console.error('Session destruction error:', err);
+            return res.status(500).json({ message: 'Error logging out' });
+          }
+
+          // Clear cookies
+          res.clearCookie('sessionId', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          });
+          res.clearCookie('connect.sid', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+          });
+
+          res.status(200).json({ message: 'Logged out successfully' });
+        });
       });
     });
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ message: 'Error logging out' });
+  } else {
+    // If no session exists, just send success
+    res.status(200).json({ message: 'Already logged out' });
   }
 });
 

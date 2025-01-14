@@ -17,11 +17,13 @@ const ProtectedRoute = () => {
   }, []);
 
   if (isLoading || isChecking) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-screen bg-gray-100">
+    <p className="text-xl font-semibold text-gray-600">Loading...</p>
+          </div>
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   return <Outlet />;

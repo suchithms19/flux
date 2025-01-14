@@ -7,10 +7,7 @@ const Header = ({ isVisible }) => {
       <div className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-0">
         Flux
       </div>
-      <div className="font-semibold text-center sm:text-left mb-2 hidden sm:block">
-        Public beta is coming soon !!
-      </div>
-      <div></div> {/*  //know more */}
+      
     </div>
   );
 };

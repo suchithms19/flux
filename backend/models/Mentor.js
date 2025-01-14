@@ -55,7 +55,10 @@ const mentorSchema = new mongoose.Schema({
   }],
   mentoringAreas: [{
     type: String,
-    enum: ['coding-software', 'mba-cat', 'freelancing', 'career-job']
+    enum: ['coding-software', 'freelancing', 'career-job']
+  }],
+  mentoringTopics: [{
+    type: String,
   }],
 
   // Social Links

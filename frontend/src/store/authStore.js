@@ -22,20 +22,26 @@ const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       set({ isLoading: true });
+      
+      // Clear all stored data first
+      localStorage.removeItem('user');
+      localStorage.removeItem('loginType');
+      localStorage.removeItem('mentorSignUpFlow');
+      set({ user: null });
+
+      // Then logout from server
       await axios.get(`${API_URL}/auth/logout`, { 
         withCredentials: true 
       });
-      set({ user: null, isLoading: false });
-      // Clear any stored data
-      localStorage.removeItem('user');
-      localStorage.removeItem('loginType');
-      // Redirect to login page
-      window.location.href = '/login';
+      
+      set({ isLoading: false });
+      
+      // Finally redirect
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
       set({ error: error.message, isLoading: false });
-      // Still clear user data and redirect even if there's an error
-      set({ user: null });
+      // Still redirect on error
       window.location.href = '/';
     }
   },
