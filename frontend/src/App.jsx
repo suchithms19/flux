@@ -11,7 +11,7 @@ import MentorBrowse from './pages/MentorBrowse';
 import MentorThankYou from './pages/MentorThankYou';
 import MentorInreview from './pages/MentorInreview';
 import AuthSuccess from './pages/AuthSuccess';
-
+import MentorProfile from './pages/MentorProfile';
 function App() {
   const { getCurrentUser, user, isLoading } = useAuthStore();
 
@@ -31,6 +31,8 @@ function App() {
             <Route path="/mentor/login" element={<MentorLogin />} />
             <Route path="/browse" element={<MentorBrowse />} />
             <Route path="/mentor" element={<MentorOnboardInfo />} />
+            <Route path="/mentor/:mentorId" element={<MentorProfile />} />
+
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>

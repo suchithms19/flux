@@ -14,10 +14,8 @@ router.get('/mentordata', async (req, res) => {
   try {
     const {
       area,
-      minRating,
       maxRate,
-      language,
-      featured,
+      experience,
       search,
       page = 1,
       limit = 10
@@ -27,23 +25,22 @@ router.get('/mentordata', async (req, res) => {
 
     // Apply filters
     if (area) query.mentoringAreas = area;
-    if (minRating) query['ratings.average'] = { $gte: parseFloat(minRating) };
     if (maxRate) query.ratePerMinute = { $lte: parseFloat(maxRate) };
-    if (language) query.languages = language;
-    if (featured === 'true') query.isFeatured = true;
+    if (experience) query.experience = { $gte: parseFloat(experience) };
     
-    // Search by name or headline
+    // Search by name, headline, or bio
     if (search) {
       query.$or = [
         { fullName: { $regex: search, $options: 'i' } },
         { headline: { $regex: search, $options: 'i' } },
-        { bio: { $regex: search, $options: 'i' } }
+        { bio: { $regex: search, $options: 'i' } },
+        { mentoringTopics: { $regex: search, $options: 'i' } }
       ];
     }
 
     const mentors = await Mentor.find(query)
       .select('-chatHistory -sessions')
-      .sort({ 'ratings.average': -1, isFeatured: -1 })
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -127,17 +124,41 @@ router.get('/applications/pending', isAuthenticated, isAdmin, async (req, res) =
 // Get mentor profile
 router.get('/profile/:mentorId', async (req, res) => {
   try {
+    console.log('Fetching mentor with ID:', req.params.mentorId);
     const mentor = await Mentor.findById(req.params.mentorId)
-      .populate('user', 'name email picture')
-      .select('-chatHistory -sessions');
+      .select(`
+        fullName email profilePhoto role organization
+        headline bio experience languages mentoringAreas
+        mentoringTopics socialLinks ratings ratePerMinute
+        totalSessionsDone isFeatured availability
+        education workExperience gender phone
+      `)
+      .populate({
+        path: 'ratings.reviews',
+        populate: {
+          path: 'user',
+          select: 'name profilePhoto'
+        }
+      })
+      .lean();
 
     if (!mentor) {
-      return res.status(404).json({ message: 'Mentor not found' });
+      console.log('Mentor not found');
+      return res.status(404).json({ 
+        success: false,
+        message: 'Mentor not found' 
+      });
     }
 
-    res.json(mentor);
+    console.log('Found mentor:', mentor);
+    res.json({
+      success: true,
+      mentor
+    });
   } catch (error) {
+    console.error('Error in mentor profile route:', error);
     res.status(500).json({ 
+      success: false,
       message: 'Error fetching mentor profile',
       error: error.message 
     });
@@ -199,7 +220,9 @@ router.post('/onboard',
       const { 
         fullName, email, phone, gender, organization,
         role, experience, headline, bio, languages,
-        mentoringAreas, profilePhoto, mentoringTopics
+        mentoringAreas, profilePhoto, mentoringTopics,
+        education, workExperience,
+        socialLinks
       } = req.body;
 
       // Validate profile photo
@@ -223,8 +246,11 @@ router.post('/onboard',
         bio,
         languages,
         mentoringAreas,
-        profilePhoto, // Save the Cloudinary URL
-        mentoringTopics, // Save the selected topics
+        profilePhoto,
+        mentoringTopics,
+        education: education || [],
+        workExperience: workExperience || [],
+        socialLinks: socialLinks || {},
         status: 'pending',
         ratePerMinute: 1
       });

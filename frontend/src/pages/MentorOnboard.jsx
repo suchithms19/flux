@@ -28,6 +28,7 @@ const MentorOnboard = () => {
   const [educationFields, setEducationFields] = useState([{ degree: '', institution: '', year: '' }]);
   const [workFields, setWorkFields] = useState([{ company: '', role: '', duration: '' }]);
   const [topicInput, setTopicInput] = useState('');
+  const [languageInput, setLanguageInput] = useState('');
   const [suggestions, setSuggestions] = useState([
     'React', 'JavaScript', 'Python', 'Java', 'Node.js', 
     'Database', 'System Design', 'Interview Prep', 
@@ -37,7 +38,19 @@ const MentorOnboard = () => {
     'Pricing Strategies', 'Resume Building', 
     'Networking', 'Career Transition'
   ]);
-  
+
+  const LANGUAGES = [
+    'English',
+    'Hindi',
+    'Tamil',
+    'Telugu',
+    'Kannada',
+    'Malayalam',
+    'Bengali',
+    'Marathi',
+    'Gujarati',
+    'Punjabi'
+  ];
   
   const form = useForm({
     defaultValues: {
@@ -50,7 +63,7 @@ const MentorOnboard = () => {
       experience: '',
       headline: '',
       bio: '',
-      languages: '',
+      languages: [],
       linkedin: '',
       twitter: '',
       github: '',
@@ -70,7 +83,7 @@ const MentorOnboard = () => {
         experience: z.string().min(1, "Experience is required"),
         headline: z.string().min(1, "Headline is required"),
         bio: z.string().min(1, "Bio is required"),
-        languages: z.string().min(1, "Languages are required"),
+        languages: z.array(z.string()).min(1, "Select at least one language"),
         mentoringAreas: z.array(z.string()).min(1, "Select at least one mentoring area"),
         mentoringTopics: z.array(z.string()).min(1, "Select at least one mentoring topic"),
         profilePhoto: z.string().min(1, "Profile photo is required"),
@@ -163,6 +176,18 @@ const MentorOnboard = () => {
     setTopicInput(''); // Clear input after adding
   };
 
+  const handleLanguageInputChange = (e) => {
+    setLanguageInput(e.target.value);
+  };
+
+  const handleAddLanguage = (language) => {
+    const currentLanguages = form.getValues('languages') || [];
+    if (!currentLanguages.includes(language)) {
+      form.setValue('languages', [...currentLanguages, language]);
+    }
+    setLanguageInput(''); // Clear input after adding
+  };
+
   const onSubmit = async (values) => {
     try {
       setIsSubmitting(true);
@@ -218,7 +243,16 @@ const MentorOnboard = () => {
         `${API_URL}/mentors/onboard`,
         {
           ...values,
-          profilePhoto: values.profilePhoto
+          profilePhoto: values.profilePhoto,
+          education: educationFields,
+          workExperience: workFields,
+          languages: values.languages, // Now it's already an array
+          socialLinks: {
+            linkedin: values.linkedin || '',
+            twitter: values.twitter || '',
+            github: values.github || '',
+            instagram: values.instagram || ''
+          }
         },
         {
           withCredentials: true,
@@ -479,11 +513,67 @@ const MentorOnboard = () => {
               name="languages"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Languages you're fluent in</FormLabel>
+                  <FormLabel>Languages you're fluent in <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="English, Kannada, Hindi" {...field} />
+                    <div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={languageInput}
+                          onChange={handleLanguageInputChange}
+                          placeholder="Type to search or add languages"
+                          className="w-full border rounded p-2"
+                        />
+                        {languageInput && (
+                          <div className="absolute z-10 w-full bg-white border rounded shadow-lg mt-1">
+                            {LANGUAGES
+                              .filter((lang) =>
+                                lang.toLowerCase().includes(languageInput.toLowerCase()) &&
+                                !field.value.includes(lang)
+                              )
+                              .map((lang) => (
+                                <div
+                                  key={lang}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleAddLanguage(lang)}
+                                >
+                                  {lang}
+                                </div>
+                              ))}
+                            {!LANGUAGES.includes(languageInput) && (
+                              <div
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleAddLanguage(languageInput)}
+                              >
+                                Add "{languageInput}"
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {field.value?.map((lang, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-[#ffe05c] text-black rounded-full"
+                          >
+                            {lang}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newLanguages = field.value.filter((l) => l !== lang);
+                                field.onChange(newLanguages);
+                              }}
+                              className="text-black hover:text-red-500"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-500" />
                 </FormItem>
               )}
             />

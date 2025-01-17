@@ -49,6 +49,20 @@ const mentorSchema = new mongoose.Schema({
     required: true
   },
 
+  // Education
+  education: [{
+    degree: String,
+    institution: String,
+    year: String
+  }],
+
+  // Work Experience
+  workExperience: [{
+    company: String,
+    role: String,
+    duration: String
+  }],
+
   // Skills and Areas
   languages: [{
     type: String
