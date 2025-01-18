@@ -124,14 +124,13 @@ router.get('/applications/pending', isAuthenticated, isAdmin, async (req, res) =
 // Get mentor profile
 router.get('/profile/:mentorId', async (req, res) => {
   try {
-    console.log('Fetching mentor with ID:', req.params.mentorId);
     const mentor = await Mentor.findById(req.params.mentorId)
       .select(`
         fullName email profilePhoto role organization
         headline bio experience languages mentoringAreas
         mentoringTopics socialLinks ratings ratePerMinute
         totalSessionsDone isFeatured availability
-        education workExperience gender phone
+        gender phone
       `)
       .populate({
         path: 'ratings.reviews',
@@ -150,7 +149,6 @@ router.get('/profile/:mentorId', async (req, res) => {
       });
     }
 
-    console.log('Found mentor:', mentor);
     res.json({
       success: true,
       mentor
@@ -221,7 +219,6 @@ router.post('/onboard',
         fullName, email, phone, gender, organization,
         role, experience, headline, bio, languages,
         mentoringAreas, profilePhoto, mentoringTopics,
-        education, workExperience,
         socialLinks
       } = req.body;
 
@@ -248,8 +245,6 @@ router.post('/onboard',
         mentoringAreas,
         profilePhoto,
         mentoringTopics,
-        education: education || [],
-        workExperience: workExperience || [],
         socialLinks: socialLinks || {},
         status: 'pending',
         ratePerMinute: 1

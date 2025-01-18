@@ -25,8 +25,6 @@ const MentorOnboard = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
-  const [educationFields, setEducationFields] = useState([{ degree: '', institution: '', year: '' }]);
-  const [workFields, setWorkFields] = useState([{ company: '', role: '', duration: '' }]);
   const [topicInput, setTopicInput] = useState('');
   const [languageInput, setLanguageInput] = useState('');
   const [suggestions, setSuggestions] = useState([
@@ -146,23 +144,6 @@ const MentorOnboard = () => {
     }
   };
 
-  const addEducationField = () => {
-    setEducationFields([...educationFields, { degree: '', institution: '', year: '' }]);
-  };
-
-  const removeEducationField = (index) => {
-    const newFields = educationFields.filter((_, i) => i !== index);
-    setEducationFields(newFields);
-  };
-
-  const addWorkField = () => {
-    setWorkFields([...workFields, { company: '', role: '', duration: '' }]);
-  };
-
-  const removeWorkField = (index) => {
-    const newFields = workFields.filter((_, i) => i !== index);
-    setWorkFields(newFields);
-  };
 
   const handleTopicInputChange = (e) => {
     setTopicInput(e.target.value);
@@ -244,9 +225,7 @@ const MentorOnboard = () => {
         {
           ...values,
           profilePhoto: values.profilePhoto,
-          education: educationFields,
-          workExperience: workFields,
-          languages: values.languages, // Now it's already an array
+          languages: values.languages, 
           socialLinks: {
             linkedin: values.linkedin || '',
             twitter: values.twitter || '',
@@ -370,7 +349,7 @@ const MentorOnboard = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email </FormLabel>
+                    <FormLabel>Email <span className="text-red-500">*</span> </FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="arjun@example.com" {...field} />
                     </FormControl>
@@ -383,7 +362,7 @@ const MentorOnboard = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input type="tel" placeholder="9019526435" {...field} />
                     </FormControl>
@@ -398,7 +377,7 @@ const MentorOnboard = () => {
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -435,7 +414,7 @@ const MentorOnboard = () => {
               name="organization"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Organization</FormLabel>
+                  <FormLabel>Current Organization <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Company or Institution name" {...field} />
                   </FormControl>
@@ -450,7 +429,7 @@ const MentorOnboard = () => {
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Role</FormLabel>
+                    <FormLabel>Current Role <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Senior Developer" {...field} />
                     </FormControl>
@@ -463,7 +442,7 @@ const MentorOnboard = () => {
                 name="experience"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Work Experience</FormLabel>
+                    <FormLabel>Work Experience <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input type="number" min="0" placeholder="5" {...field} />
                     </FormControl>
@@ -478,7 +457,7 @@ const MentorOnboard = () => {
               name="headline"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Headline</FormLabel>
+                  <FormLabel>Headline <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Goldman Sachs| IIMA Rank 8 | Entrepreneur"
@@ -495,7 +474,7 @@ const MentorOnboard = () => {
               name="bio"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bio / About You</FormLabel>
+                  <FormLabel>Bio / About You <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Textarea
                       className="min-h-[150px]"
@@ -689,140 +668,7 @@ const MentorOnboard = () => {
               )}
             />
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Education Details</h3>
-                <Button
-                  type="button"
-                  onClick={addEducationField}
-                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                >
-                  <Plus className="h-4 w-4" /> Add Education
-                </Button>
-              </div>
-              {educationFields.map((field, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-4 relative">
-                  {index > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => removeEducationField(index)}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <FormField
-                      control={form.control}
-                      name={`education.${index}.degree`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Degree</FormLabel>
-                          <FormControl>
-                            <Input placeholder="B.Tech" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`education.${index}.institution`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Institution</FormLabel>
-                          <FormControl>
-                            <Input placeholder="IIT Delhi" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`education.${index}.year`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Year</FormLabel>
-                          <FormControl>
-                            <Input placeholder="2016 - 2020" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Work Experience</h3>
-                <Button
-                  type="button"
-                  onClick={addWorkField}
-                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                >
-                  <Plus className="h-4 w-4" /> Add Experience
-                </Button>
-              </div>
-              {workFields.map((field, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-4 relative">
-                  {index > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => removeWorkField(index)}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <FormField
-                      control={form.control}
-                      name={`work.${index}.company`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Google" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`work.${index}.role`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Senior Software Engineer" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`work.${index}.duration`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Duration</FormLabel>
-                          <FormControl>
-                            <Input placeholder="2020 - Present" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
+           
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Social Media Links</h3>
               <div className="space-y-4">
