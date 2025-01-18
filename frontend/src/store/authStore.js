@@ -13,6 +13,10 @@ const useAuthStore = create((set, get) => ({
     try {
       // Store login type in localStorage
       localStorage.setItem('loginType', loginType);
+      // Store current path before redirect if not already set
+      if (loginType === 'normal' && !localStorage.getItem('redirectAfterLogin')) {
+        localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      }
       window.location.href = `${API_URL}/auth/google`;
     } catch (error) {
       set({ error: error.message });
@@ -27,6 +31,7 @@ const useAuthStore = create((set, get) => ({
       localStorage.removeItem('user');
       localStorage.removeItem('loginType');
       localStorage.removeItem('mentorSignUpFlow');
+      localStorage.removeItem('redirectAfterLogin');
       set({ user: null });
 
       // Then logout from server
@@ -57,24 +62,37 @@ const useAuthStore = create((set, get) => ({
         withCredentials: true
       });
       
-      // Check loginType and handle mentor routing
-      const loginType = localStorage.getItem('loginType');
-      if (loginType === 'mentor') {
-        if (data.role === 'mentor' && data.mentorStatus === 'approved') {
-          window.location.href = '/mentor/dashboard';
-        } else if (data.mentorStatus === 'pending') {
-          window.location.href = '/mentor/inreview';
-        } else if (data.mentorStatus === 'not_applied') {
-          window.location.href = '/mentor/onboard';
-        }
-        localStorage.removeItem('loginType');
-      }
-
+      // Store user data
       set({ user: data, isLoading: false, error: null });
-      return data;
+
+      // Check loginType and handle routing
+      const loginType = localStorage.getItem('loginType');
+      
+      // Handle mentor routing
+      if (loginType === 'mentor') {
+        localStorage.removeItem('loginType');
+        if (data.role === 'mentor') {
+          if (data.mentorStatus === 'approved') {
+            return { ...data, redirect: '/mentor/dashboard' };
+          } else if (data.mentorStatus === 'pending') {
+            return { ...data, redirect: '/mentor/inreview' };
+          }
+        }
+        return { ...data, redirect: '/mentor/onboard' };
+      }
+      
+      // Handle normal user routing
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        return { ...data, redirect: redirectPath };
+      }
+      
+      // Default redirect for normal users
+      return { ...data, redirect: '/browse' };
     } catch (error) {
       set({ error: error.message, isLoading: false, user: null });
-      return null;
+      return { redirect: '/login' };
     }
   },
 }));

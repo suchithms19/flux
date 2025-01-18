@@ -7,9 +7,25 @@ function Login() {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      // Get the redirect path from localStorage
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectPath);
+      } else {
+        navigate('/browse');
+      }
+    }
+  }, [user, navigate]);
+
+  const handleAuth = () => {
+    login('normal');
+  };
 
   return (
-    <div className="font-poppins min-h-screen  flex items-center justify-center p-4">
+    <div className="font-poppins min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
@@ -20,7 +36,7 @@ function Login() {
         </div>
 
         {/* Login Box */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-8 ">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-8">
           {/* Toggle Buttons */}
           <div className="flex rounded-lg bg-gray-100 p-1">
             <button
@@ -58,7 +74,7 @@ function Login() {
           </div>
 
           <button
-            onClick={() => login('normal')}
+            onClick={handleAuth}
             className="w-full flex items-center justify-center px-6 py-4 rounded-xl font-semibold text-black bg-customYellow shadow-lg hover:shadow-xl"
           >
             <img
@@ -68,11 +84,7 @@ function Login() {
             />
             {isSignUp ? 'Sign Up with Google' : 'Sign In with Google'}
           </button>
-
-          
         </div>
-
-       
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ export default function ProfileCard({ mentor }) {
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 line-clamp-2">
+          <p className="text-sm text-gray-600 line-clamp-3 md:line-clamp-2 ">
             {mentor.bio}
           </p>
 
@@ -51,15 +51,6 @@ export default function ProfileCard({ mentor }) {
                 </Badge>
               ))}
             </div>
-            {/* {mentor.languages?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {mentor.languages.map((lang, index) => (
-                  <Badge key={`lang-${index}`} variant="outline" className="text-xs px-2 py-0.5">
-                    {lang}
-                  </Badge>
-                ))}
-              </div>
-            )} */}
           </div>
 
           {/* Footer */}

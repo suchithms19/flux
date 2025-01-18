@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {  MessageCircle, Video, Mail, Linkedin } from "lucide-react";
+import useAuthStore from '@/store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -15,6 +16,8 @@ export default function MentorProfile() {
   const [mentor, setMentor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   useEffect(() => {
       setTimeout(() => {
@@ -46,11 +49,23 @@ export default function MentorProfile() {
   }, [mentorId]);
 
   const handleStartChat = () => {
+    if (!user) {
+      // Store the current path for redirection after login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
+      return;
+    }
     // TODO: Implement chat functionality
     console.log('Start chat with mentor');
   };
 
   const handleStartCall = () => {
+    if (!user) {
+      // Store the current path for redirection after login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
+      return;
+    }
     // TODO: Implement video call functionality
     console.log('Start video call with mentor');
   };
