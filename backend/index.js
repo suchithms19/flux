@@ -65,6 +65,8 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/mentors', require('./routes/mentor.routes'));
 app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/stream', require('./routes/stream.routes'));
+const paymentRoutes = require('./routes/payment.routes');
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
