@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {  MessageCircle, Video, Mail, Linkedin } from "lucide-react";
 import useAuthStore from '@/store/authStore';
+import RechargeModal from '@/components/common/RechargeModal';
+import { toast } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -18,6 +20,8 @@ export default function MentorProfile() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const [showRechargeModal, setShowRechargeModal] = useState(false);
+  const [isRedirectingToChat, setIsRedirectingToChat] = useState(false);
 
   useEffect(() => {
       setTimeout(() => {
@@ -48,15 +52,44 @@ export default function MentorProfile() {
     }
   }, [mentorId]);
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     if (!user) {
-      // Store the current path for redirection after login
       localStorage.setItem('redirectAfterLogin', window.location.pathname);
       navigate('/login');
       return;
     }
-    // TODO: Implement chat functionality
-    console.log('Start chat with mentor');
+
+    // Check user's balance
+    try {
+      const response = await axios.get(`${API_URL}/payments/wallet`, {
+        withCredentials: true
+      });
+      
+      const balance = response.data.balance;
+      
+      if (balance <= 0) {
+        setShowRechargeModal(true);
+      } else {
+        // Proceed to chat
+        startChat();
+      }
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      toast.error('Failed to check balance');
+    }
+  };
+
+  const handleRechargeSuccess = (newBalance) => {
+    // Update user's balance in the UI if needed
+    startChat();
+  };
+
+  const startChat = () => {
+    setIsRedirectingToChat(true);
+    // TODO: Implement chat redirection
+    // For now, just show a message
+    toast.success('Redirecting to chat...');
+    // navigate(`/chat/${mentorId}`); // You'll implement this route later
   };
 
   const handleStartCall = () => {
@@ -243,6 +276,13 @@ export default function MentorProfile() {
       </main>
       
       <Footer />
+
+      {/* Add RechargeModal */}
+      <RechargeModal 
+        isOpen={showRechargeModal}
+        onClose={() => setShowRechargeModal(false)}
+        onSuccess={handleRechargeSuccess}
+      />
     </div>
   );
 }
