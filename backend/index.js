@@ -16,19 +16,35 @@ const waitlistRoutes = require('./routes/waitlist.routes');
 
 const app = express();
 
-
+// Trust proxy - required for rate limiting behind a reverse proxy
+app.set('trust proxy', 1);
 
 // Basic middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://getflux.tech',
+  'https://www.getflux.tech'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
-
 
 // Session and auth middleware
 app.use(session(sessionConfig));
