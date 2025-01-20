@@ -10,6 +10,9 @@ const rateLimit = require('express-rate-limit');
 const sessionConfig = require('./config/session.config');
 require('./config/passport');  // Import passport configuration
 const paymentRoutes = require('./routes/payment.routes');
+const mentorRoutes = require('./routes/mentor.routes');
+const streamRoutes = require('./routes/stream.routes');
+const waitlistRoutes = require('./routes/waitlist.routes');
 
 const app = express();
 
@@ -67,6 +70,10 @@ app.use('/api/mentors', require('./routes/mentor.routes'));
 app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/stream', require('./routes/stream.routes'));
 app.use('/api/payments', paymentRoutes);
+app.use('/api/mentor', mentorRoutes);
+app.use('/api/stream', streamRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
