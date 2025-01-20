@@ -16,6 +16,9 @@ const waitlistRoutes = require('./routes/waitlist.routes');
 
 const app = express();
 
+// Trust proxy - required for rate limiting behind a reverse proxy
+app.set('trust proxy', 1);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
