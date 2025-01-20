@@ -7,6 +7,7 @@ const waitlistSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     lowercase: true,
+    
   },
   joinedAt: {
     type: Date,
