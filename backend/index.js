@@ -16,20 +16,7 @@ const waitlistRoutes = require('./routes/waitlist.routes');
 
 const app = express();
 
-// Trust proxy - required for rate limiting behind a reverse proxy
-app.set('trust proxy', 1);
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500 // limit each IP to 500 requests per windowMs
-});
-
-const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
 
 // Basic middleware
 app.use(express.json());
@@ -41,9 +28,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Apply rate limiters
-app.use(limiter);
-app.use('/api/auth', authRateLimiter);
+
 
 // Session and auth middleware
 app.use(session(sessionConfig));
