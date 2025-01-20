@@ -9,18 +9,19 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const sessionConfig = require('./config/session.config');
 require('./config/passport');  // Import passport configuration
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 500 // limit each IP to 500 requests per windowMs
 });
 
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 200, // limit each IP to 200 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
 
@@ -65,7 +66,6 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/mentors', require('./routes/mentor.routes'));
 app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/stream', require('./routes/stream.routes'));
-const paymentRoutes = require('./routes/payment.routes');
 app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;

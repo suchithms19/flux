@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserCircle, LogOut, Wallet } from 'lucide-react';
+import { UserCircle, LogOut, Wallet} from 'lucide-react';
 
 const Header = ({ isVisible }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateBalance } = useAuthStore();
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+
+  // Update balance only when user first logs in
+  useEffect(() => {
+    if (user && user.role !== 'mentor') {
+      updateBalance();
+    }
+  }, [user?.role]); // Only run when user role changes
 
   const handleLogin = () => {
     localStorage.setItem('redirectAfterLogin', window.location.pathname);
@@ -28,7 +35,14 @@ const Header = ({ isVisible }) => {
 
   const handleProfile = () => {
     if (user?.role === 'mentor') {
-      navigate('/mentor/dashboard');
+      // Check mentor status and redirect accordingly
+      if (user.mentorStatus === 'approved') {
+        navigate('/mentor-dashboard'); // Change this to your actual mentor dashboard route
+      } else if (user.mentorStatus === 'pending') {
+        navigate('/mentor/inreview');
+      } else {
+        navigate('/mentor/onboard');
+      }
     } else {
       navigate('/profile');
     }
@@ -49,8 +63,8 @@ const Header = ({ isVisible }) => {
       
       <div className="flex items-center gap-4">
         {user && user.role !== 'mentor' && (
-          <div className="flex items-center gap-2 mr-2">
-           <p className='lowercase'> balance:</p> 
+          <div className="flex items-center gap-2 mr-2 bg-white/20 px-3 py-1 rounded-full">
+            <Wallet className="h-4 w-4" />
             <span className="text-sm font-medium">₹{user.balance || 0}</span>
           </div>
         )}
@@ -58,10 +72,10 @@ const Header = ({ isVisible }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                {user.profilePhoto ? (
+                {user.picture ? (
                   <img
-                    src={user.profilePhoto}
-                    alt={user.fullName}
+                    src={user.picture}
+                    alt={user.name}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
@@ -72,7 +86,7 @@ const Header = ({ isVisible }) => {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={handleProfile} className="cursor-pointer">
                 <UserCircle className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>{user.role === 'mentor' ? 'Dashboard' : 'Profile'}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />

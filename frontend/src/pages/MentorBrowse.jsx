@@ -82,7 +82,7 @@ export default function MentorBrowse() {
 
   return (
     <div className="font-poppins pt-28">
-      <Header isVisible={isVisible} />
+    <Header isVisible={isVisible} />
       
       <div className="max-w-7xl mx-auto px-4">
         {/* Mobile Filter Button */}
@@ -222,8 +222,8 @@ export default function MentorBrowse() {
                     </Label>
                   </div>
                 ))}
-              </div>
-
+    </div>
+    
               {/* Rate Range */}
               <div className="space-y-2">
                 <Label className="text-gray-700">Maximum Rate (₹/min): {tempFilters.maxRate}</Label>
@@ -284,6 +284,6 @@ export default function MentorBrowse() {
         </div>
       </div>
       <Footer />
-    </div>
+  </div>
   );
 }

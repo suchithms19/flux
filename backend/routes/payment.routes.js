@@ -2,8 +2,8 @@ const router = require('express').Router();
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { isAuthenticated } = require('../middleware/auth.middleware');
-const Transaction = require('../models/Transaction');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -14,13 +14,16 @@ const razorpay = new Razorpay({
 // Create a new payment order
 router.post('/create-order', isAuthenticated, async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount } = req.body; // amount in rupees
 
-    // Amount should be in smallest currency unit (paise for INR)
     const options = {
-      amount: amount * 100, // Convert to paise
+      amount: amount * 100, 
       currency: 'INR',
-      receipt: `rcpt_${Date.now()}`
+      receipt: 'wallet_recharge_' + Date.now(),
+      notes: {
+        userId: req.user._id.toString(),
+        purpose: 'wallet_recharge'
+      }
     };
 
     const order = await razorpay.orders.create(options);
@@ -32,72 +35,143 @@ router.post('/create-order', isAuthenticated, async (req, res) => {
       amount: amount,
       balance: (req.user.balance || 0) + amount,
       description: 'Wallet recharge',
-      orderId: order.id,
-      status: 'pending'
+      status: 'pending',
+      paymentDetails: {
+        orderId: order.id
+      }
     });
 
     res.json({
-      orderId: order.id,
-      amount: amount * 100,
-      currency: 'INR',
-      keyId: process.env.RAZORPAY_KEY_ID
+      success: true,
+      order
     });
   } catch (error) {
-    console.error('Payment order creation error:', error);
+    console.error('Error creating payment order:', error);
     res.status(500).json({
+      success: false,
       message: 'Error creating payment order',
       error: error.message
     });
   }
 });
 
-// Verify payment signature and update wallet
+// Deduct from wallet
+router.post('/deduct', isAuthenticated, async (req, res) => {
+  try {
+    const { amount, description, metadata = {} } = req.body;
+
+    // Get user with current balance
+    const user = await User.findById(req.user._id);
+    
+    // Check if user has sufficient balance
+    if (user.balance < amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Insufficient balance',
+        balance: user.balance
+      });
+    }
+
+    // Calculate new balance
+    const newBalance = user.balance - amount;
+
+    // Create transaction first
+    const transaction = await Transaction.create({
+      user: user._id,
+      type: 'debit',
+      amount: amount,
+      balance: newBalance,
+      description,
+      status: 'success',
+      metadata
+    });
+
+    // Update user's balance
+    user.balance = newBalance;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Amount deducted successfully',
+      balance: newBalance,
+      transaction
+    });
+  } catch (error) {
+    console.error('Error deducting amount:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deducting amount',
+      error: error.message
+    });
+  }
+});
+
+// Verify payment and update wallet
 router.post('/verify', isAuthenticated, async (req, res) => {
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
-      razorpay_signature
+      razorpay_signature,
+      amount
     } = req.body;
 
-    // Verify signature
-    const sign = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSign = crypto
+    // Verify payment signature
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(sign)
+      .update(body.toString())
       .digest('hex');
 
-    if (razorpay_signature !== expectedSign) {
-      return res.status(400).json({ message: 'Invalid signature' });
+    if (expectedSignature !== razorpay_signature) {
+      // Update transaction status to failed
+      await Transaction.findOneAndUpdate(
+        { 'paymentDetails.orderId': razorpay_order_id },
+        { 
+          status: 'failed',
+          paymentDetails: {
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            signature: razorpay_signature
+          }
+        }
+      );
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature'
+      });
     }
-
-    // Find the pending transaction
-    const transaction = await Transaction.findOne({
-      orderId: razorpay_order_id,
-      status: 'pending'
-    });
-
-    if (!transaction) {
-      return res.status(404).json({ message: 'Transaction not found' });
-    }
-
-    // Update transaction status
-    transaction.status = 'completed';
-    transaction.paymentId = razorpay_payment_id;
-    await transaction.save();
 
     // Update user's wallet balance
-    const user = await User.findById(transaction.user);
-    user.balance = (user.balance || 0) + transaction.amount;
+    const user = await User.findById(req.user._id);
+    const newBalance = (user.balance || 0) + (amount / 100); // Convert paise to rupees
+    user.balance = newBalance;
     await user.save();
 
+    // Update transaction status to success
+    await Transaction.findOneAndUpdate(
+      { 'paymentDetails.orderId': razorpay_order_id },
+      { 
+        status: 'success',
+        balance: newBalance,
+        paymentDetails: {
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          signature: razorpay_signature
+        }
+      }
+    );
+
     res.json({
-      message: 'Payment successful',
-      balance: user.balance
+      success: true,
+      message: 'Payment verified and wallet updated successfully',
+      balance: newBalance
     });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    console.error('Error verifying payment:', error);
     res.status(500).json({
+      success: false,
       message: 'Error verifying payment',
       error: error.message
     });
@@ -105,12 +179,17 @@ router.post('/verify', isAuthenticated, async (req, res) => {
 });
 
 // Get wallet balance
-router.get('/wallet', isAuthenticated, async (req, res) => {
+router.get('/wallet-balance', isAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('balance');
-    res.json({ balance: user.balance || 0 });
+    res.json({
+      success: true,
+      balance: user.balance || 0
+    });
   } catch (error) {
+    console.error('Error fetching wallet balance:', error);
     res.status(500).json({
+      success: false,
       message: 'Error fetching wallet balance',
       error: error.message
     });
@@ -120,52 +199,32 @@ router.get('/wallet', isAuthenticated, async (req, res) => {
 // Get transaction history
 router.get('/transactions', isAuthenticated, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const transactions = await Transaction.find({ user: req.user._id })
       .sort({ createdAt: -1 })
-      .limit(20);
+      .skip(skip)
+      .limit(limit);
 
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({
-      message: 'Error fetching transactions',
-      error: error.message
-    });
-  }
-});
-
-// Deduct balance (for internal use, e.g., when starting a session)
-router.post('/deduct', isAuthenticated, async (req, res) => {
-  try {
-    const { amount, description, metadata } = req.body;
-    const user = await User.findById(req.user._id);
-
-    if (!user || (user.balance || 0) < amount) {
-      return res.status(400).json({ message: 'Insufficient balance' });
-    }
-
-    // Create debit transaction
-    const transaction = await Transaction.create({
-      user: req.user._id,
-      type: 'debit',
-      amount: -amount, // Store as negative for debit
-      balance: user.balance - amount,
-      description,
-      status: 'completed',
-      metadata
-    });
-
-    // Update user's balance
-    user.balance -= amount;
-    await user.save();
+    const total = await Transaction.countDocuments({ user: req.user._id });
 
     res.json({
-      message: 'Balance deducted successfully',
-      balance: user.balance,
-      transaction
+      success: true,
+      transactions,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        currentPage: page,
+        perPage: limit
+      }
     });
   } catch (error) {
+    console.error('Error fetching transactions:', error);
     res.status(500).json({
-      message: 'Error deducting balance',
+      success: false,
+      message: 'Error fetching transactions',
       error: error.message
     });
   }

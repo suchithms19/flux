@@ -23,21 +23,19 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  paymentId: {
-    type: String,
-    sparse: true
-  },
-  orderId: {
-    type: String,
-    sparse: true
-  },
   status: {
     type: String,
-    enum: ['pending', 'completed', 'failed'],
+    enum: ['pending', 'success', 'failed'],
     default: 'pending'
   },
+  paymentDetails: {
+    orderId: String,
+    paymentId: String,
+    signature: String
+  },
   metadata: {
-    type: mongoose.Schema.Types.Mixed
+    type: Map,
+    of: mongoose.Schema.Types.Mixed
   }
 }, {
   timestamps: true

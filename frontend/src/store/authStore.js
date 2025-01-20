@@ -8,6 +8,7 @@ const useAuthStore = create((set, get) => ({
   user: null,
   isLoading: false,
   error: null,
+  lastBalanceUpdate: 0, // Track last balance update time
 
   login: async (loginType = 'normal') => {
     try {
@@ -17,7 +18,7 @@ const useAuthStore = create((set, get) => ({
       if (loginType === 'normal' && !localStorage.getItem('redirectAfterLogin')) {
         localStorage.setItem('redirectAfterLogin', window.location.pathname);
       }
-      window.location.href = `${API_URL}/auth/google`;
+      window.location.href = `${API_URL}/auth/google${loginType === 'mentor' ? '?type=mentor' : ''}`;
     } catch (error) {
       set({ error: error.message });
     }
@@ -57,13 +58,13 @@ const useAuthStore = create((set, get) => ({
     }
 
     try {
-      set({ isLoading: true });
-      const { data } = await axios.get(`${API_URL}/auth/current-user`, {
+      set({ isLoading: true, error: null });
+      const response = await axios.get(`${API_URL}/auth/current-user`, {
         withCredentials: true
       });
       
       // Store user data
-      set({ user: data, isLoading: false, error: null });
+      set({ user: response.data, isLoading: false });
 
       // Check loginType and handle routing
       const loginType = localStorage.getItem('loginType');
@@ -71,28 +72,54 @@ const useAuthStore = create((set, get) => ({
       // Handle mentor routing
       if (loginType === 'mentor') {
         localStorage.removeItem('loginType');
-        if (data.role === 'mentor') {
-          if (data.mentorStatus === 'approved') {
-            return { ...data, redirect: '/mentor/dashboard' };
-          } else if (data.mentorStatus === 'pending') {
-            return { ...data, redirect: '/mentor/inreview' };
+        if (response.data.role === 'mentor') {
+          if (response.data.mentorStatus === 'approved') {
+            return { ...response.data, redirect: '/mentor' };
+          } else if (response.data.mentorStatus === 'pending') {
+            return { ...response.data, redirect: '/mentor/inreview' };
           }
         }
-        return { ...data, redirect: '/mentor/onboard' };
+        return { ...response.data, redirect: '/mentor/onboard' };
       }
       
       // Handle normal user routing
       const redirectPath = localStorage.getItem('redirectAfterLogin');
       if (redirectPath) {
         localStorage.removeItem('redirectAfterLogin');
-        return { ...data, redirect: redirectPath };
+        return { ...response.data, redirect: redirectPath };
       }
       
       // Default redirect for normal users
-      return { ...data, redirect: '/browse' };
+      return { ...response.data, redirect: '/browse' };
     } catch (error) {
       set({ error: error.message, isLoading: false, user: null });
       return { redirect: '/login' };
+    }
+  },
+
+  updateBalance: async () => {
+    try {
+      // Get current state
+      const state = useAuthStore.getState();
+      const now = Date.now();
+
+      // Only update if more than 5 seconds have passed since last update
+      if (now - state.lastBalanceUpdate < 5000) {
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/payments/wallet-balance`, {
+        withCredentials: true
+      });
+      
+      if (response.data.success) {
+        set(state => ({
+          user: state.user ? { ...state.user, balance: response.data.balance } : null,
+          lastBalanceUpdate: now
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
     }
   },
 }));

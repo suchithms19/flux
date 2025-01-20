@@ -22,23 +22,40 @@ const userSchema = new mongoose.Schema({
   },
   mentorStatus: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'not_applied'],
-    default: 'not_applied'
+    enum: ['none', 'pending', 'approved', 'rejected'],
+    default: 'none'
   },
-  mentorProfile: {
-    expertise: [String],
-    bio: String,
-    hourlyRate: Number,
-    experience: String,
-    availability: {
-      type: Map,
-      of: [String]
+  balance: {
+    type: Number,
+    default: 10,
+    min: [0, 'Balance cannot be negative'],
+    validate: {
+      validator: function(v) {
+        return v >= 0;
+      },
+      message: 'Insufficient balance'
     }
   },
+  sessionsAttended: {
+    type: Number,
+    default: 0
+  },
+  recentSessions: [{
+    mentor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Mentor'
+    },
+    date: Date,
+    duration: Number,
+    topic: String
+  }],
+
   createdAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('User', userSchema); 
