@@ -13,7 +13,6 @@ import MentorInreview from './pages/MentorInreview';
 import AuthSuccess from './pages/AuthSuccess';
 import MentorProfile from './pages/MentorProfile';
 import UserProfile from './pages/UserProfile';
-import WaitlistSuccess from './pages/WaitlistSuccess';
 
 function App() {
   const { getCurrentUser, user, isLoading } = useAuthStore();
@@ -35,14 +34,13 @@ function App() {
         <Route path="/browse" element={<MentorBrowse />} />
         <Route path="/mentor" element={<MentorOnboardInfo />} />
         <Route path="/mentor/:mentorId" element={<MentorProfile />} />
-        <Route path="/waitlist-success" element={<WaitlistSuccess />} />
         
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/mentor/onboard" element={<MentorOnboard />} />
           <Route path="/mentor/thank-you" element={<MentorThankYou />} />
-          <Route path="/mentor/inreview" element={<MentorInreview />} />
+          <Route path="/mentor/inreview" element={<MentorInreview />} />        
         </Route>
       </Routes>
     </Router>

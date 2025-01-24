@@ -30,7 +30,7 @@ const LandingPage = () => {
   return (
     <div className='font-poppins bg-white text-black '>
       <Header isVisible={isVisible} />
-      <Hero isVisible={isVisible} handleJoinexplore={handleJoinexplore} />
+      <Hero isVisible={isVisible} handleJoinexplore={handleJoinexplore} handleJoinMentor={handleJoinMentor} />
       <section className='space-y-16 md:space-y-24 lg:space-y-36 px-4 md:px-6'>
         <FeatureSection
           imageSrc={image1}

@@ -17,7 +17,7 @@ router.post('/create-order', isAuthenticated, async (req, res) => {
     const { amount } = req.body; // amount in rupees
 
     const options = {
-      amount: amount * 100, 
+      amount: amount * 100, // Convert to paise for Razorpay
       currency: 'INR',
       receipt: 'wallet_recharge_' + Date.now(),
       notes: {
@@ -113,7 +113,7 @@ router.post('/verify', isAuthenticated, async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      amount
+      amount // amount in rupees
     } = req.body;
 
     // Verify payment signature
@@ -145,7 +145,7 @@ router.post('/verify', isAuthenticated, async (req, res) => {
 
     // Update user's wallet balance
     const user = await User.findById(req.user._id);
-    const newBalance = (user.balance || 0) + (amount / 100); // Convert paise to rupees
+    const newBalance = (user.balance || 0) + amount; // amount is already in rupees
     user.balance = newBalance;
     await user.save();
 
