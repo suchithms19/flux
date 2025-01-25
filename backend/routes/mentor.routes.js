@@ -67,7 +67,7 @@ router.get('/mentordata', async (req, res) => {
 // Admin: Approve/Reject mentor
 router.put('/application/:mentorId', isAuthenticated, isAdmin, async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, dashboardUrl } = req.body;
     const mentor = await Mentor.findById(req.params.mentorId);
 
     if (!mentor) {
@@ -89,8 +89,9 @@ router.put('/application/:mentorId', isAuthenticated, isAdmin, async (req, res) 
       subject: `Mentor Application ${status.charAt(0).toUpperCase() + status.slice(1)}`,
       template: 'mentorApplicationStatus',
       data: {
-        status,
-        mentorName: mentor.fullName
+        mentorName: mentor.fullName,
+        approved: status === 'approved',
+        dashboardUrl
       }
     });
 

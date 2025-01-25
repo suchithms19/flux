@@ -43,7 +43,7 @@ const AdminMentors = () => {
     fetchPendingMentors();
   }, [user, navigate]);
 
-  const handleMentorAction = async (mentorId, status) => {
+  const handleMentorAction = async (mentorId, action) => {
     setProcessingId(mentorId);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/mentors/application/${mentorId}`, {
@@ -52,7 +52,11 @@ const AdminMentors = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ 
+          status: action,
+          approved: action === 'approved',
+          dashboardUrl: `${window.location.origin}/mentor-dashboard`
+        })
       });
 
       if (!response.ok) {
@@ -61,10 +65,10 @@ const AdminMentors = () => {
 
       // Remove the mentor from the list
       setPendingMentors(prev => prev.filter(mentor => mentor._id !== mentorId));
-      toast.success(`Mentor ${status} successfully`);
+      toast.success(`Mentor ${action === 'approved' ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
       console.error('Error:', error);
-      toast.error(`Failed to ${status} mentor`);
+      toast.error(`Failed to ${action} mentor`);
     } finally {
       setProcessingId(null);
     }
