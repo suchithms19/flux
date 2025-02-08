@@ -97,7 +97,7 @@ const Hero = ({ isVisible, handleJoinexplore,handleJoinMentor }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style jsx="true">{`
         .strip-container {
           width: 100%;
           overflow: hidden;

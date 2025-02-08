@@ -6,6 +6,8 @@ const sendEmail = require('../utils/emailService');
 const { validateMentorOnboarding } = require('../middleware/mentorValidation.middleware');
 const upload = require('../middleware/upload.middleware');
 const { uploadToCloudinary } = require('../utils/uploadService');
+const MentorAvailability = require('../models/MentorAvailability');
+const WebSocket = require('ws');
 
 
 
@@ -131,8 +133,9 @@ router.get('/profile/:mentorId', async (req, res) => {
         headline bio experience languages mentoringAreas
         mentoringTopics socialLinks ratings ratePerMinute
         totalSessionsDone isFeatured availability
-        gender phone
+        gender phone user
       `)
+      .populate('user', '_id name email')
       .populate({
         path: 'ratings.reviews',
         populate: {
@@ -325,5 +328,122 @@ router.post('/upload-photo',
     }
   }
 );
+
+// Get mentor's schedule
+router.get('/schedule/:mentorId', async (req, res) => {
+  try {
+    const availability = await MentorAvailability.findOne({
+      mentor: req.params.mentorId
+    });
+
+    if (!availability) {
+      return res.json({ schedule: {} });
+    }
+
+    res.json({ schedule: availability.schedule });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching schedule',
+      error: error.message 
+    });
+  }
+});
+
+// Update mentor's schedule
+router.put('/schedule', isAuthenticated, async (req, res) => {
+  try {
+    const { schedule } = req.body;
+
+    let availability = await MentorAvailability.findOne({
+      mentor: req.user._id
+    });
+
+    if (!availability) {
+      availability = new MentorAvailability({
+        mentor: req.user._id,
+        schedule
+      });
+    } else {
+      availability.schedule = schedule;
+    }
+
+    await availability.save();
+    res.json(availability);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error updating schedule',
+      error: error.message 
+    });
+  }
+});
+
+// Get mentor's online status
+router.get('/status/:mentorId', async (req, res) => {
+  try {
+    const availability = await MentorAvailability.findOne({
+      mentor: req.params.mentorId
+    });
+
+    if (!availability) {
+      return res.json({
+        isOnline: false,
+        lastSeen: new Date()
+      });
+    }
+
+    res.json({
+      isOnline: availability.isOnline,
+      lastSeen: availability.lastSeen
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching status',
+      error: error.message 
+    });
+  }
+});
+
+// Update mentor's online status
+router.put('/status', isAuthenticated, async (req, res) => {
+  try {
+    const { isOnline } = req.body;
+
+    let availability = await MentorAvailability.findOne({
+      mentor: req.user._id
+    });
+
+    if (!availability) {
+      availability = new MentorAvailability({
+        mentor: req.user._id,
+        isOnline
+      });
+    } else {
+      availability.isOnline = isOnline;
+    }
+
+    await availability.save();
+
+    // Notify connected clients through WebSocket
+    if (global.wss) {
+      global.wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'MENTOR_STATUS',
+            mentorId: req.user._id,
+            isOnline,
+            lastSeen: availability.lastSeen
+          }));
+        }
+      });
+    }
+
+    res.json(availability);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error updating status',
+      error: error.message 
+    });
+  }
+});
 
 module.exports = router; 

@@ -10,8 +10,17 @@ function AuthSuccess() {
     const handleAuthSuccess = async () => {
       try {
         const userData = await getCurrentUser();
-        // All users now come with a redirect path
-        navigate(userData.redirect);
+        
+        // Get the stored redirect path
+        const redirectPath = localStorage.getItem('redirectAfterLogin');
+        if (redirectPath) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectPath);
+          return;
+        }
+        
+        // Default redirect from userData
+        navigate(userData.redirect || '/');
       } catch (error) {
         console.error('Error in auth success:', error);
         navigate('/login');

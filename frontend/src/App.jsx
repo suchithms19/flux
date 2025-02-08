@@ -14,6 +14,9 @@ import AuthSuccess from './pages/AuthSuccess';
 import MentorProfile from './pages/MentorProfile';
 import UserProfile from './pages/UserProfile';
 import AdminMentors from './pages/AdminMentors';
+import ChatRoom from './pages/ChatRoom';
+import MentorDashboard from './pages/MentorDashboard';
+
 function App() {
   const { getCurrentUser, user, isLoading } = useAuthStore();
 
@@ -42,7 +45,9 @@ function App() {
           <Route path="/mentor/onboard" element={<MentorOnboard />} />
           <Route path="/mentor/thank-you" element={<MentorThankYou />} />
           <Route path="/mentor/inreview" element={<MentorInreview />} />       
-          <Route path="/admin/mentors" element={<AdminMentors />} /> 
+          <Route path="/admin/mentors" element={<AdminMentors />} />
+          <Route path="/mentor-dashboard/*" element={<MentorDashboard />} />
+          <Route path="/chat/:sessionId" element={<ChatRoom />} />
         </Route>
 
       </Routes>

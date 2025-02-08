@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {  MessageCircle, Video, Mail, Linkedin } from "lucide-react";
 import useAuthStore from '@/store/authStore';
+import { toast } from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -30,8 +31,10 @@ export default function MentorProfile() {
         setError(null);
         console.log('Fetching mentor profile:', `${API_URL}/mentors/profile/${mentorId}`);
         const response = await axios.get(`${API_URL}/mentors/profile/${mentorId}`);
+        console.log('Mentor profile response:', response.data);
         if (response.data.success) {
           setMentor(response.data.mentor);
+          console.log('Mentor data set:', response.data.mentor);
         } else {
           setError(response.data.message);
         }
@@ -48,15 +51,55 @@ export default function MentorProfile() {
     }
   }, [mentorId]);
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     if (!user) {
-      // Store the current path for redirection after login
+      // Store complete current path for the auth flow
       localStorage.setItem('redirectAfterLogin', window.location.pathname);
       navigate('/login');
       return;
     }
-    // TODO: Implement chat functionality
-    console.log('Start chat with mentor');
+
+    try {
+      console.log('Starting chat with mentor:', mentor);
+
+      if (!mentor.user || !mentor.user._id) {
+        console.error('Mentor user ID is missing');
+        toast.error('Unable to start chat. Mentor data is incomplete.');
+        return;
+      }
+
+      // Create a new chat session
+      const response = await fetch(`${API_URL}/sessions/book`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          mentorId: mentor.user._id,
+          ratePerBlock: mentor.ratePerMinute || 1,
+          metadata: {
+            topic: 'General Discussion',
+            description: `Chat session with ${mentor.fullName}`
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Session booking error:', errorData);
+        throw new Error(errorData.message || 'Failed to create chat session');
+      }
+
+      const session = await response.json();
+      console.log('Session created successfully:', session);
+
+      // Navigate to chat room with session ID
+      navigate(`/chat/${session._id}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast.error('Failed to start chat session');
+    }
   };
 
   const handleStartCall = () => {

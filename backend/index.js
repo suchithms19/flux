@@ -10,6 +10,8 @@ const rateLimit = require('express-rate-limit');
 const sessionConfig = require('./config/session.config');
 require('./config/passport');  // Import passport configuration
 const paymentRoutes = require('./routes/payment.routes');
+const http = require('http');
+const setupWebSocketServer = require('./services/websocket.service');
 
 const app = express();
 
@@ -67,8 +69,14 @@ app.use('/api/mentors', require('./routes/mentor.routes'));
 app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/stream', require('./routes/stream.routes'));
 app.use('/api/payments', paymentRoutes);
+app.use('/api/upload', require('./routes/upload.routes'));
 
+// Update the server creation
+const server = http.createServer(app);
+setupWebSocketServer(server);
+
+// Update the server listen
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
