@@ -38,7 +38,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a href="mailto:getflux.tech@gmail.com" target="_blank">getflux.tech@gmail.com</a></li>
+              <li><a href="mailto:mssuchith@gmail.com" target="_blank">mssuchith@gmail.com</a></li>
             </ul>
           </div>
 
