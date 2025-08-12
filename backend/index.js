@@ -30,12 +30,7 @@ const authRateLimiter = rateLimit({
 // Basic middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 
 // Apply rate limiters
 app.use(limiter);
