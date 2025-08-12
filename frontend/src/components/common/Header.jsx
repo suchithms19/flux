@@ -52,19 +52,19 @@ const Header = ({ isVisible }) => {
 
   return (
     <>
-      <div className={`font-poppins fixed top-0 left-0 right-0 flex flex-col sm:flex-row justify-between items-center lg:p-4 px-4 py-2 bg-customYellow text-black z-10 ${
+      <div className={`font-poppins fixed top-0 left-0 right-0 flex flex-row-reverse sm:flex-row justify-between items-center lg:p-4 px-4 py-2 bg-customYellow text-black z-10 ${
         isLandingPage 
           ? `transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`
           : ''
       }`}>
         <div 
-          className="text-3xl sm:text-4xl uppercase font-bold mb-2 sm:mb-0 cursor-pointer"
+          className="text-3xl sm:text-4xl uppercase font-bold mb-0 cursor-pointer"
           onClick={() => navigate('/')}
         >
           Flux
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 sm:order-last order-first">
           {user && user.role !== 'mentor' && (
             <>
               <div className="flex items-center gap-2 mr-2 bg-white/20 px-3 py-2 rounded-md">
