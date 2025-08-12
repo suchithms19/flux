@@ -270,7 +270,38 @@ export default function MentorBrowse() {
           {/* Mentor List - Right Side */}
           <div className="col-span-12 lg:col-span-9 space-y-4 mb-8">
             {loading ? (
-              <div className="text-center py-8 text-gray-600">Loading mentors...</div>
+              <div className="grid grid-cols-1 gap-4">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="p-4 bg-white rounded-xl shadow-sm">
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-32 h-32 rounded-lg bg-gray-200 animate-pulse" />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div className="space-y-2">
+                          <div className="h-5 w-56 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-4 w-72 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-5 w-40 bg-yellow-100 rounded-full animate-pulse" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+                          <div className="h-4 w-11/12 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-4 w-10/12 bg-gray-200 rounded animate-pulse" />
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {Array.from({ length: 8 }).map((_, chipIdx) => (
+                            <div key={chipIdx} className="h-6 w-20 bg-gray-100 rounded-full animate-pulse" />
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="h-6 w-20 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-9 w-28 bg-gray-200 rounded-full animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : mentors.length === 0 ? (
               <div className="text-center py-8 text-gray-600">No mentors found matching your criteria.</div>
             ) : (

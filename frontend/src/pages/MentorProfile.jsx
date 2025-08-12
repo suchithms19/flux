@@ -122,16 +122,75 @@ export default function MentorProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-xl text-gray-600 bg-white p-8 rounded-xl shadow-sm">
-          Loading profile...
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <Header isVisible={isVisible} />
+        <main className="pt-28 pb-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="relative h-48 bg-gradient-to-r from-yellow-100 to-yellow-200">
+                <div className="absolute -bottom-16 left-8">
+                  <div className="w-36 h-36 rounded-xl object-cover border-4 border-white shadow-md bg-gray-200 animate-pulse" />
+                </div>
+              </div>
+              <div className="pt-20 pb-6 px-8">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-7 w-48 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-7 w-7 bg-gray-200 rounded-md animate-pulse" />
+                    </div>
+                    <div className="h-5 w-64 bg-gray-200 rounded mt-2 animate-pulse" />
+                    <div className="h-6 w-40 bg-yellow-100 rounded-full mt-2 animate-pulse" />
+                  </div>
+                  <div className="hidden sm:flex gap-3">
+                    <div className="h-10 w-28 bg-gray-200 rounded-lg animate-pulse" />
+                    <div className="h-10 w-28 bg-gray-200 rounded-lg animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-12 gap-6 mt-6">
+              <div className="col-span-12 lg:col-span-8 space-y-6">
+                <div className="bg-white rounded-xl p-6 shadow-sm space-y-3">
+                  <div className="h-6 w-48 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-5/6 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <div className="h-6 w-56 bg-gray-200 rounded animate-pulse mb-4" />
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 6 }).map((_, idx) => (
+                      <div key={idx} className="h-7 w-24 bg-gray-100 rounded-full animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-4" />
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={idx} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+                            <div className="h-4 w-5/6 bg-gray-200 rounded animate-pulse" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
-
-    
 
   if (error || !mentor) {
     return (
