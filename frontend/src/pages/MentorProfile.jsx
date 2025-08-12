@@ -20,6 +20,13 @@ export default function MentorProfile() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
+  const normalizeUrl = (url) => {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed.replace(/^\/+/, '')}`;
+  };
+
   useEffect(() => {
       setTimeout(() => {
         setIsVisible(true);
@@ -172,7 +179,7 @@ export default function MentorProfile() {
                     <h1 className="text-2xl font-bold text-gray-900">{mentor.fullName}</h1>
                     {mentor.socialLinks?.linkedin && (
                       <a 
-                        href={mentor.socialLinks.linkedin}
+                        href={normalizeUrl(mentor.socialLinks.linkedin)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#0A66C2] hover:opacity-80 transition-opacity"
